@@ -1,0 +1,51 @@
+# Layer 1 Banned Keywords Dictionary
+# Add one keyword per line (case-insensitive)
+
+# Security Threats
+hack
+hacking
+exploit
+malware
+virus
+trojan
+ransomware
+keylogger
+backdoor
+rootkit
+
+# Network Attacks
+ddos
+dos attack
+botnet
+packet sniffing
+man in the middle
+mitm
+
+# Web Vulnerabilities
+sql injection
+xss
+cross site scripting
+csrf
+command injection
+path traversal
+directory traversal
+
+# Social Engineering
+phishing
+spear phishing
+social engineering
+pretexting
+baiting
+
+# Sensitive Data (Examples)
+password
+credit card
+ssn
+social security
+bank account
+
+# Hate Speech & Harassment
+# (Add terms specific to your moderation policy)
+
+# Custom Keywords
+# Add domain-specific banned terms here
