@@ -43,6 +43,8 @@ credit card
 ssn
 social security
 bank account
+admin access
+userdata
 
 # Hate Speech & Harassment
 # (Add terms specific to your moderation policy)
