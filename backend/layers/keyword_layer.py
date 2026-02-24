@@ -1,3 +1,9 @@
+# -------------------------------------------------
+# Keyword Layer (Deterministic Threat Scanner)
+# Performs fast pattern-based detection
+# Designed for high-sensitivity filtering
+# -------------------------------------------------
+
 import re
 import os
 
@@ -67,7 +73,8 @@ class KeywordLayer:
             "encoded payload",
             "obfuscated code",
         ]
-
+    # Compile regex patterns once during initialization
+    # Improves performance by avoiding repeated compilation
     def _compile_patterns(self):
         """Compile regex patterns for common threats"""
 
@@ -78,19 +85,23 @@ class KeywordLayer:
                 re.IGNORECASE
             ),
 
-            # SSN pattern
+            # Structured data leakage detection
+            # Identifies common sensitive numeric formats
             re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
 
             # Credit card pattern
             re.compile(r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b'),
 
-            # Script tag (XSS)
+            # Basic XSS detection using script tag pattern
+            # DOTALL used to catch multiline payloads
             re.compile(r'<script[^>]*>.*?</script>', re.IGNORECASE | re.DOTALL),
 
-            # Shell command patterns
+            # Detect common command execution attempts
+            # Focuses on remote download and privilege misuse
             re.compile(r'\b(wget|curl|nc|netcat|chmod 777)\b', re.IGNORECASE),
 
-            # SQL keywords combo
+            # Detect potential SQL manipulation attempts
+            # Looks for keyword combinations in suspicious order
             re.compile(r'\b(select|union|insert|drop|delete|update)\b.*\b(from|into|where)\b', re.IGNORECASE),
         ]
 

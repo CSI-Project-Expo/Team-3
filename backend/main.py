@@ -1,3 +1,34 @@
+# =============================================================================
+# SYSTEM ARCHITECTURE OVERVIEW
+# =============================================================================
+# This FastAPI application implements a dual-layer AI defense mechanism
+# designed to mitigate prompt injection and instruction override attacks.
+#
+# The security architecture follows a defense-in-depth strategy:
+#
+#   1. Layer 1 - Deterministic Keyword & Pattern Detection
+#   2. Layer 2 - AI-Based Semantic Risk Classification
+#   3. Protected Main LLM Execution (Only if SAFE)
+#   4. Centralized Logging & Audit Trail (MongoDB)
+#
+# All user inputs pass through both security layers before any LLM invocation.
+# The system is intentionally fail-closed — if analysis fails, execution is denied.
+#
+# This design prevents:
+#   - System prompt extraction
+#   - Jailbreak attempts
+#   - Role-play injection bypass
+#   - Instruction override attacks
+#   - Encoded exploit payloads
+#
+# =============================================================================
+
+# ---- Security Pipeline ----
+# 1. Keyword scan
+# 2. AI semantic analysis
+# 3. LLM execution (if safe)
+# 4. MongoDB logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -51,6 +82,10 @@ async def chat(request: MessageRequest):
     ai_result = await ai_layer.analyze(request.message)
 
     if not ai_result["safe"]:
+        # MongoDB logging ensures:
+        # - Audit trail
+        # - Injection tracking
+        # - Behavioral monitoring
         await logs_collection.insert_one({
             "message": request.message,
             "safe": False,
