@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from "react"
+import ReactMarkdown from "react-markdown"
 import "./App.css"
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import Dashboard from "./Dashboard"
 
-function App() {
+function ChatPage() {
   const [message, setMessage] = useState("")
   const [chatHistory, setChatHistory] = useState([])
   const [defenseInfo, setDefenseInfo] = useState(null)
@@ -102,12 +105,31 @@ setDefenseInfo({
 
   return (
     <div className="app-container">
+      <div className="app-background"></div>
 
       <div className="chat-container">
+        <div className="chat-header">
+          <div className="chat-header-icon">🤖</div>
+          <div className="chat-header-text">
+            <span className="chat-title">Protected AI Assistant</span>
+            <span className="chat-subtitle">Secured by Multi-Layer Defense</span>
+          </div>
+          <div className="status-indicator"></div>
+        </div>
         <div className="chat-history">
           {chatHistory.map((msg, index) => (
             <div key={index} className={`message ${msg.role}`}>
-              {msg.content}
+              {msg.role === "thinking" ? (
+  <span className="typing">
+    <span></span>
+    <span></span>
+    <span></span>
+  </span>
+) : msg.role === "ai" ? (
+  <ReactMarkdown>{msg.content}</ReactMarkdown>
+) : (
+  msg.content
+)}  
             </div>
           ))}
           <div ref={chatEndRef}></div>
@@ -120,42 +142,85 @@ setDefenseInfo({
             onKeyDown={handleKeyDown}
             placeholder="Message Protected AI..."
           />
+          <button className="send-btn" onClick={sendMessage} disabled={loading || !message.trim()}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
         </div>
       </div>
 
 <div className={`defense-panel ${defenseInfo?.risk_level || ""}`}>
-  <h3>🛡 Defense Panel</h3>
+  <div className="defense-header">
+    <div className="defense-icon">🛡</div>
+    <h3>Defense Panel</h3>
+  </div>
 
   {defenseInfo ? (
     <>
-      <p><strong>Final Status:</strong> {defenseInfo.final_status}</p>
+      <div className="defense-section status-section">
+        <div className="section-label">Final Status</div>
+        <div className={`status-badge ${defenseInfo.final_status.toLowerCase()}`}>
+          {defenseInfo.final_status}
+        </div>
+      </div>
 
-      <hr />
+      <div className="defense-divider"></div>
 
-      <p><strong>Keyword Layer:</strong></p>
-      <p>
-        Flagged: {defenseInfo.keyword_flag ? "YES ⚠️" : "NO"}
-      </p>
-      {defenseInfo.keyword_flag && (
-        <p>Reason: {defenseInfo.keyword_reason}</p>
-      )}
+      <div className="defense-section">
+        <div className="section-label">
+          <span className="layer-icon">🔍</span>
+          Keyword Layer
+        </div>
+        <div className="section-content">
+          <div className={`flag-indicator ${defenseInfo.keyword_flag ? 'flagged' : 'clear'}`}>
+            {defenseInfo.keyword_flag ? "FLAGGED ⚠️" : "CLEAR ✓"}
+          </div>
+          {defenseInfo.keyword_flag && (
+            <div className="reason-text">{defenseInfo.keyword_reason}</div>
+          )}
+        </div>
+      </div>
 
-      <hr />
+      <div className="defense-divider"></div>
 
-      <p><strong>AI Judge:</strong></p>
-      <p>
-        Decision: {defenseInfo.final_status === "SAFE" ? "SAFE" : "UNSAFE"}
-      </p>
-      {defenseInfo.ai_reason && (
-        <p>Reason: {defenseInfo.ai_reason}</p>
-      )}
+      <div className="defense-section">
+        <div className="section-label">
+          <span className="layer-icon">🧠</span>
+          AI Judge
+        </div>
+        <div className="section-content">
+          <div className={`decision-indicator ${defenseInfo.final_status === "SAFE" ? 'safe' : 'unsafe'}`}>
+            {defenseInfo.final_status === "SAFE" ? "SAFE" : "UNSAFE"}
+          </div>
+          {defenseInfo.ai_reason && (
+            <div className="reason-text">{defenseInfo.ai_reason}</div>
+          )}
+        </div>
+      </div>
     </>
   ) : (
-    <p>No messages yet.</p>
+    <div className="empty-state">
+      <div className="empty-icon">💬</div>
+      <p>No messages yet.</p>
+      <span>Send a message to see defense analysis</span>
+    </div>
   )}
 </div>
 
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<ChatPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Router>
   )
 }
 

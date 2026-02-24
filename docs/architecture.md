@@ -1,112 +1,277 @@
-# Dual-Layer Defense Architecture
+# 🛡️ Dual-Layer AI Security Architecture
 
-## Overview
-This system implements a two-tier content safety scanning approach combining rule-based and AI-powered analysis.
+## 1. Introduction
 
-## Architecture Flow
+This system implements a **defense-in-depth architecture** to protect Large Language Model (LLM) interactions from prompt injection, instruction override attempts, and malicious content.
+
+Rather than exposing the LLM directly to user input, the system introduces multiple security validation layers before execution.
+
+This document outlines the architecture, data flow, threat model, and deployment considerations.
+
+---
+
+# 2. High-Level Architecture
 
 ```
-User Input → Layer 1 (Keywords) → Layer 2 (AI) → Response
+User Input
+     ↓
+Layer 1 – Rule-Based Threat Scanner
+     ↓
+Layer 2 – AI Semantic Security Judge
+     ↓
+Protected LLM Execution (if SAFE)
+     ↓
+Logging & Monitoring (MongoDB + Dashboard)
 ```
 
-### Layer 1: Keyword & Regex Scanning
-**Purpose:** Fast, deterministic filtering of known threats
+The system ensures that untrusted input is evaluated before any LLM response is generated.
 
-**Components:**
-- Banned keyword dictionary
-- Regex patterns for:
-  - Credit card numbers
-  - SSN patterns
-  - XSS attempts
-  - SQL injection patterns
+---
 
-**Performance:** ~1-5ms per scan
+# 3. Layer 1 – Rule-Based Keyword & Pattern Scanner
 
-**Advantages:**
+### Objective
+
+Provide fast, deterministic detection of high-risk tokens and known exploit patterns.
+
+### Detection Mechanisms
+
+- Prompt injection phrases  
+  - "ignore previous instructions"
+  - "reveal system prompt"
+  - "override safeguards"
+
+- Operational attack terms  
+  - malware, reverse shell, privilege escalation, payload
+
+- Injection patterns  
+  - SQL injection keywords  
+  - Command injection terms  
+  - Script tag detection (XSS)
+
+- Sensitive data patterns (regex-based)  
+  - SSN formats  
+  - Credit card number structures  
+
+### Performance
+
+- Approximate latency: **1–5ms**
+- No external API calls
+- Zero inference cost
+
+### Strengths
+
 - Extremely fast
-- No API costs
-- Predictable behavior
-- Easy to update rules
+- Deterministic behavior
+- Easy to audit and update
+- Transparent detection logic
 
-**Limitations:**
-- Can't understand context
-- Prone to false positives
-- Can be bypassed with obfuscation
+### Limitations
 
-### Layer 2: AI Analysis (LiteLLM)
-**Purpose:** Deep semantic understanding and context-aware detection
+- Cannot understand intent or context
+- May generate false positives
+- Can be bypassed via obfuscation or encoding
 
-**Components:**
-- LiteLLM integration (supports multiple providers)
-- System prompt for safety judging
-- Async processing
+---
 
-**Performance:** ~500-2000ms per scan
+# 4. Layer 2 – AI Semantic Security Judge
 
-**Advantages:**
+### Objective
+
+Perform context-aware classification of user input using an LLM-based safety model.
+
+### Functionality
+
+- Detect prompt injection attempts
+- Identify hidden system prompt probing
+- Recognize indirect or hypothetical bypass attempts
+- Classify operational exploit intent
+- Detect encoded or obfuscated malicious requests
+
+### Output Format
+
+The AI judge strictly outputs:
+
+```
+SAFE
+UNSAFE: <short reason>
+```
+
+### Performance
+
+- Approximate latency: **500–2000ms**
+- Requires external API (via LiteLLM)
+- Subject to provider availability
+
+### Strengths
+
 - Understands context and intent
-- Catches sophisticated threats
-- Adapts to new attack patterns
-- Better at handling edge cases
+- Handles sophisticated injection strategies
+- Detects abstract or role-play jailbreak attempts
+- Adaptive to evolving attack techniques
 
-**Limitations:**
+### Limitations
+
 - Slower than Layer 1
-- API costs
-- May have false negatives
-- Requires internet connectivity
+- Dependent on network connectivity
+- API cost per request
+- Possible false negatives
 
-## Data Flow
+### Security Behavior
 
-1. **Frontend** sends message via POST /check-message
-2. **Layer 1** scans for banned keywords/patterns
-   - If flagged → immediate response (unsafe)
-   - If clean → proceed to Layer 2
-3. **Layer 2** performs AI analysis
-   - Sends message to LiteLLM
-   - Receives safety judgment
-   - Returns final verdict
-4. **Response** sent back to frontend with:
-   - safe: boolean
-   - layer: which layer caught it
-   - reason: explanation
+If Layer 2 fails (timeout, malformed response, API failure):
 
-## Security Considerations
+→ The system **fails closed** and blocks the request.
 
-### Defense in Depth
-- Multiple layers reduce single points of failure
-- Layer 1 catches obvious threats quickly
-- Layer 2 provides nuanced analysis
+---
 
-### Privacy
-- Messages are processed temporarily
-- Consider storing only scan results, not content
-- Encrypt data in transit (HTTPS)
+# 5. Protected LLM Execution Layer
 
-### Rate Limiting
-- Implement per-user rate limits
-- Prevent API abuse
-- Monitor for DoS attempts
+The main LLM is only invoked when both security layers classify the input as SAFE.
 
-## Deployment Recommendations
+Security controls include:
 
-### Development
-- Local FastAPI server
-- Local Vite dev server
-- Test API keys in .env
+- System prompt priority enforcement
+- Instruction override resistance
+- Structured response formatting
+- Exception handling and timeout limits
+- No direct user access to base model
 
-### Production
-- Deploy backend on cloud (AWS, GCP, Render)
-- Deploy frontend on Vercel/Netlify
-- Use environment variables for secrets
-- Enable HTTPS
-- Add rate limiting
-- Set up monitoring/logging
+This ensures that malicious inputs never reach the primary LLM.
 
-## Future Enhancements
+---
 
-1. **Layer 0:** IP reputation checking
-2. **Layer 3:** Behavioral analysis (user history)
-3. **Database:** Store scan results in MongoDB
-4. **Analytics:** Dashboard for threat patterns
-5. **Machine Learning:** Train custom models on your data
-6. **Multi-language support:** Detect threats in different languages
+# 6. Data Flow
+
+1. **Frontend**
+   - Sends message via POST `/chat`
+
+2. **Layer 1**
+   - Performs keyword and regex scanning
+   - Flags high-risk tokens
+   - Passes result to Layer 2
+
+3. **Layer 2**
+   - Performs semantic analysis
+   - Returns SAFE or UNSAFE classification
+
+4. **Decision Logic**
+   - If UNSAFE → Block request
+   - If SAFE → Forward to main LLM
+
+5. **Logging**
+   - Store:
+     - Message
+     - Safety status
+     - Detection reason
+     - Layer results
+     - Timestamp
+   - Display in monitoring dashboard
+
+---
+
+# 7. Threat Model
+
+This system is designed to mitigate:
+
+- Prompt injection attacks
+- Instruction override attempts
+- Hidden prompt extraction
+- Data exfiltration attempts
+- Role-play jailbreak strategies
+- Operational exploit generation
+- Encoded bypass techniques
+
+It assumes:
+
+- User input is untrusted
+- LLM behavior must be constrained
+- Attackers may attempt indirect manipulation
+
+---
+
+# 8. Security Principles Applied
+
+## Defense-in-Depth
+Multiple independent validation layers reduce single points of failure.
+
+## Fail-Closed Design
+If any security layer fails → block request.
+
+## Least Privilege
+The main LLM does not receive unsafe input.
+
+## Explicit Classification
+AI judge outputs restricted to SAFE / UNSAFE only.
+
+## Logging & Auditability
+All decisions are logged for review and analysis.
+
+---
+
+# 9. Logging & Monitoring
+
+All interactions are recorded in MongoDB:
+
+- Original message
+- Keyword detection result
+- AI judge decision
+- Reason for blocking (if applicable)
+- Timestamp
+
+This enables:
+
+- Audit review
+- Security analytics
+- Threat trend monitoring
+- Dashboard visualization
+
+---
+
+# 10. Deployment Considerations
+
+## Development Environment
+
+- Python 3.11.9
+- Local MongoDB instance
+- FastAPI backend (Uvicorn)
+- React monitoring interface
+
+## Production Recommendations
+
+- Deploy backend to cloud environment (AWS / GCP / Render)
+- Use HTTPS for encrypted communication
+- Store secrets in environment variables
+- Implement rate limiting
+- Add monitoring and alerting
+- Enable API usage tracking
+
+---
+
+# 11. Future Security Enhancements
+
+- Layer 0: IP reputation & geo-filtering
+- Multi-turn injection detection
+- Behavioral anomaly analysis
+- Risk scoring engine
+- Attack category tagging
+- Custom-trained safety classifier
+- Multi-language threat detection
+- Automated alerting system
+
+---
+
+# 12. Conclusion
+
+This architecture demonstrates a practical implementation of layered AI security controls.
+
+By combining:
+
+- Deterministic rule-based detection
+- Semantic AI classification
+- Controlled LLM execution
+- Monitoring & logging
+
+The system significantly reduces the risk of prompt injection and malicious exploitation of AI systems.
+
+This design aligns with modern AI security best practices and showcases applied cybersecurity principles in LLM integration.
