@@ -1,4 +1,9 @@
 # db.py
+# -------------------------------------------------
+# MongoDB Configuration Module
+# Centralized database connection setup
+# Used for audit logging and monitoring
+# -------------------------------------------------
 from motor.motor_asyncio import AsyncIOMotorClient
 
 MONGO_URI = "mongodb://localhost:27017"

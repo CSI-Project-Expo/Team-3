@@ -1,3 +1,9 @@
+# -------------------------------------------------
+# Main LLM Service (Protected Execution Layer)
+# Handles final response generation
+# Only invoked after security approval
+# -------------------------------------------------
+
 from litellm import acompletion
 import os
 
@@ -19,6 +25,9 @@ class LLMService:
             return "Hey! 👋 What can I help you with today?"
 
         try:
+            # System instruction block
+            # Defines tone, structure, and formatting policy
+            # Prevents prompt override by user input
             response = await acompletion(
                 model=self.model,
                 messages=[
