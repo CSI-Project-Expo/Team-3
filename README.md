@@ -1,16 +1,15 @@
 # 🛡️ AI Prompt Injection Defense System  
-### Cybersecurity-Focused Dual-Layer Protection Architecture
+### Dual-Layer LLM Input Protection Architecture
 
-A cybersecurity-oriented AI defense system designed to detect and block:
+An LLM protection system that attempts to detect and filter:
 
-- Prompt injection attacks  
-- Instruction override attempts  
-- Hidden system prompt extraction  
-- Operational exploit requests  
-- Sensitive data probing  
+- Prompt injection attempts
+- Instruction override attempts
+- System prompt probing
+- Suspicious or harmful requests
+- Sensitive data patterns
 
-This project implements a **defense-in-depth architecture** to secure Large Language Model (LLM) interactions before execution.
-
+This project implements a simple defense-in-depth architecture for filtering Large Language Model (LLM) inputs before execution.
 ---
 
 # 🎯 Project Objective
@@ -19,14 +18,13 @@ Modern AI systems are vulnerable to prompt manipulation and instruction override
 
 This system demonstrates:
 
-- Layered AI security controls  
-- Hybrid rule-based + semantic analysis  
-- Fail-closed security design  
-- Defensive LLM integration  
-- Security monitoring & audit logging  
+- Layered input filtering
+- Rule-based and AI-based analysis
+- Fail-closed request handling
+- Protected LLM access
+- Request logging
 
-This is a **cybersecurity system**, not just a chatbot wrapper.
-
+This project demonstrates how security controls can be added to a chatbot-style LLM application.
 ---
 
 # 🧠 Security Architecture
@@ -40,7 +38,7 @@ Layer 2: AI Semantic Security Judge
      ↓
 Main LLM (Invoked Only If SAFE)
      ↓
-MongoDB Logging & Audit Monitoring
+MongoDB Logging 
 ```
 
 ---
@@ -49,14 +47,13 @@ MongoDB Logging & Audit Monitoring
 
 ## 🧱 Layer 1 — Aggressive Keyword & Pattern Detection
 
-Fast rule-based scanner that detects:
+Fast rule-based scanner that matches suspicious patterns including:
 
 - Injection phrases (ignore previous instructions, override rules)
-- Hidden prompt probing attempts
 - SQL/XSS/command injection terms
 - Sensitive identifiers (SSN, credit card patterns)
 - Shell execution patterns
-- Encoded/obfuscation indicators
+- Basic obfuscation-related keywords
 
 This layer is intentionally aggressive to flag high-risk tokens early.
 
@@ -71,14 +68,12 @@ SAFE
 UNSAFE: <short reason>
 ```
 
-Detects:
+Attempts to detect:
 
-- Prompt injection attempts  
-- System instruction reconstruction  
-- Hypothetical bypass framing  
-- Role-play jailbreak attempts  
-- Encoded or obfuscated attack patterns  
-- Operational exploit intent  
+- Prompt injection attempts
+- System instruction probing
+- Role-play jailbreak attempts
+- Suspicious requests
 
 ⚠️ This layer fails closed.  
 If it errors or times out → request is blocked.
@@ -91,7 +86,7 @@ Only executed if both security layers approve.
 
 Security controls include:
 
-- System instruction priority enforcement  
+- Fixed system instruction prompt
 - Timeout protection  
 - Structured response formatting  
 - Critical exception handling  
@@ -175,15 +170,17 @@ pip install -r requirements.txt
 ## 4️⃣ Configure `.env`
 
 ```
-OPENAI_API_KEY=your_key_here
-LITELLM_MODEL=openrouter/openai/gpt-3.5-turbo
-MAIN_LLM_MODEL=openrouter/openai/gpt-3.5-turbo
+OPENAI_BASE_URL=your_provider_base_url
+OPENAI_API_KEY=your_api_key
+
+LITELLM_MODEL=your_litellm_model
+MAIN_LLM_MODEL=your_main_llm_model
 ```
 
 ## 5️⃣ Run backend
 
 ```bash
-python main.py
+python -m uvicorn main:app --reload
 ```
 
 Server runs at:
@@ -192,11 +189,7 @@ Server runs at:
 http://localhost:8000
 ```
 
-API Docs:
 
-```
-http://localhost:8000/docs
-```
 
 ---
 
@@ -216,24 +209,9 @@ npm run dev
 
 If you prefer a faster setup for development or demo purposes:
 
-1️⃣ Install backend dependencies
+Firstly, install all required dependencies for both frontend and backend.
 
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-2️⃣ Install frontend dependencies
-
-```bash
-cd ../frontend
-npm install
-```
-
-3️⃣ Ensure MongoDB is running  
-(Recommended: Set MongoDB service to start automatically)
-
-4️⃣ From the project root directory, simply run:
+From the project root directory, simply run:
 
 ```bash
 startup.bat
@@ -245,10 +223,7 @@ This will automatically:
 - Start MongoDB (if configured in script)  
 - Launch the FastAPI backend (Uvicorn)  
 - Start the React frontend  
-- Open browser tabs:
-  - http://localhost:5173  
-  - http://localhost:5173/dashboard  
-  - http://localhost:8000/docs  
+- Open browser tabs
 
 ⚠️ Make sure Python 3.11.9 is being used in your virtual environment.
 
@@ -289,9 +264,8 @@ All interactions are stored in MongoDB:
 
 This enables:
 
-- Audit review  
-- Threat monitoring  
-- Security analytics  
+- Basic audit review
+- Request inspection 
 
 ---
 
@@ -299,11 +273,9 @@ This enables:
 
 - Defense-in-depth  
 - Fail-closed AI judge  
-- Strict output validation  
 - No raw LLM exposure  
 - Structured prompt enforcement  
-- Injection-aware system instructions  
-
+- Fixed system instructions for the LLM
 ---
 
 # 🛠️ Tech Stack
@@ -334,9 +306,7 @@ This enables:
 # 👥 Team
 
 Team-3  
-Cybersecurity & AI Safety Project  
-
-
+Prompt Injection Defense Project
 ---
 
 # 📝 License
